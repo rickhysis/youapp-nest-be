@@ -7,30 +7,17 @@ import {
     createBaseNestApplication,
 } from '../src/utils/test/helpers/module';
 import { AUTH_ROUTE_PREFIX } from '../src/common/constants/route';
-import { AuthModule } from '../src/auth/auth.module';
+import { AuthModule } from '../src/modules/auth/auth.module';
 import { authenticatedRequest, mockUser } from '../src/utils/test/helpers/request';
-import { AuthService } from '../src/auth/auth.service';
+import { AuthService } from '../src/modules/auth/auth.service';
+import { Gender } from '../src/modules/users/schemas/user.schema';
 
-const USER_ROUTE = `${AUTH_ROUTE_PREFIX}/getProfile`;
+const GET_USER_ROUTE = `${AUTH_ROUTE_PREFIX}/getProfile`;
+const CREATE_USER_ROUTE = `${AUTH_ROUTE_PREFIX}/createProfile`;
+const PUT_USER_ROUTE = `${AUTH_ROUTE_PREFIX}/updateProfile`;
 
 
-jest.mock('../src/common/decorators/get-current-user-id.decorator.ts', () => ({
-    ...jest.requireActual('../src/common/decorators/get-current-user-id.decorator.ts'),
-    GetCurrentUserId: jest.fn(() => mockUser.id),
-}));
-
-jest.mock('../src/common/decorators/get-current.decorator.ts', () => ({
-    ...jest.requireActual('../src/common/decorators/get-current.decorator.ts'),
-    GetCurrentUser: jest.fn(() => mockUser),
-}));
-
-// jest.mock('../src/auth/strategies/access-token.strategies.ts', () => ({
-//     AccessTokenStrategies: jest.fn().mockImplementation(() => ({
-//       validate: jest.fn(),
-//     })),
-//   }));
-
-describe('AuthController (e2e)', () => {
+describe('UserController (e2e)', () => {
     let app: INestApplication;
     let authService: AuthService;
     let token: any;
@@ -38,13 +25,13 @@ describe('AuthController (e2e)', () => {
     beforeEach(async () => {
         const moduleFixture: TestingModule = await createBaseTestingModule({
             imports: [AuthModule],
-        }).compile();
+            providers: []
+        })
+            .compile();
 
-        
         authService = moduleFixture.get(AuthService);
-        
+
         token = await authService.getTokens(mockUser);
-        console.log(token)
 
         app = await createBaseNestApplication(moduleFixture);
 
@@ -54,8 +41,9 @@ describe('AuthController (e2e)', () => {
     describe('user (GET)', () => {
 
         it('should return users', async () => {
+
             return authenticatedRequest(app.getHttpServer(), token.access_token)
-                .get(USER_ROUTE)
+                .get(GET_USER_ROUTE)
                 .expect(HttpStatus.OK)
                 .then((response) => {
                     expect(response.body).toHaveProperty('username');
@@ -63,12 +51,135 @@ describe('AuthController (e2e)', () => {
         });
 
         it('should return authentication error if token is invalid', async () => {
+
             return authenticatedRequest(app.getHttpServer(), 'invalid')
-                .get(USER_ROUTE)
+                .get(GET_USER_ROUTE)
                 .expect(HttpStatus.UNAUTHORIZED)
                 .then((response) => {
                     expect(response.body.message).toEqual('Unauthorized');
                 });
+        });
+    });
+
+    describe('user (POST)', () => {
+
+        it('should return valid Request', async () => {
+            // Test when providing a valid request
+            const validCreateUserDto = {
+                name: 'Valid Name',
+                gender: Gender.MALE, // Assuming Gender is an enum
+                birth: '12-12-2020',
+                horoscope: 'Cancer',
+                zodiac: 'Dog',
+                height: '170',
+                weight: '100',
+                interest: ['Music', 'Singing'],
+            };
+
+            return authenticatedRequest(app.getHttpServer(), token.access_token)
+                .post(CREATE_USER_ROUTE)
+                .send(validCreateUserDto)
+                .expect(HttpStatus.OK)
+                .then((response) => {
+                    expect(response.body).toHaveProperty('name');
+                    expect(response.body).toBeDefined();
+                });
+
+        });
+
+        it('should return invalid Gender', async () => {
+            const invalidGenderDto = {
+                name: 'Valid Name',
+                gender: 'InvalidGender', // Assuming 'InvalidGender' is not a valid gender
+                birth: '12-12-2020',
+                horoscope: 'Cancer',
+                zodiac: 'Dog',
+                height: '170',
+                weight: '100',
+                interest: ['Music', 'Singing']
+            };
+
+            return authenticatedRequest(app.getHttpServer(), token.access_token)
+                .post(CREATE_USER_ROUTE)
+                .send(invalidGenderDto)
+                .expect(HttpStatus.BAD_REQUEST)
+                .then((response) => {
+                    expect(response.body.message).toEqual(['gender must be one of the following values: Male, Female']);
+                });
+
+        });
+
+        it('should return empty Name', async () => {
+            const emptyNameDto = {
+                name: '', // Empty name
+                gender: Gender.MALE,
+                birth: '12-12-2020',
+                horoscope: 'Cancer',
+                zodiac: 'Dog',
+                height: '170',
+                weight: '100',
+                interest: ['Music', 'Singing']
+            };
+
+            return authenticatedRequest(app.getHttpServer(), token.access_token)
+                .post(CREATE_USER_ROUTE)
+                .send(emptyNameDto)
+                .expect(HttpStatus.BAD_REQUEST)
+                .then((response) => {
+                    expect(response.body.message).toEqual(['name should not be empty']);
+                });
+
+        });
+    });
+
+    describe('user (PUT)', () => {
+
+        it('should return invalid Gender', async () => {
+            const invalidGenderDto = {
+                gender: 'InvalidGender', // Assuming 'InvalidGender' is not a valid gender
+            };
+
+            return authenticatedRequest(app.getHttpServer(), token.access_token)
+                .put(PUT_USER_ROUTE)
+                .send(invalidGenderDto)
+                .expect(HttpStatus.BAD_REQUEST)
+                .then((response) => {
+                    expect(response.body.message).toContain('gender must be one of the following values: Male, Female');
+                });
+
+        });
+
+        it('should return invalid Interest', async () => {
+            const invalidInterestDto = {
+                interest: 'InvalidInterest', // Assuming 'InvalidInterest' is not a valid interest
+            };
+
+            return authenticatedRequest(app.getHttpServer(), token.access_token)
+                .put(PUT_USER_ROUTE)
+                .send(invalidInterestDto)
+                .expect(HttpStatus.BAD_REQUEST)
+                .then((response) => {
+                    expect(response.body.message).toContain('interest must be an array');
+                });
+
+        });
+
+
+        it('Unauthorized Access', async () => {
+            const unauthorizedUserId = 'unauthorizedUserId';
+            const updateDto = {
+                // Provide valid data for testing
+            };
+
+            return authenticatedRequest(app.getHttpServer(), token.access_token)
+                .put(PUT_USER_ROUTE)
+                .set('Authorization', `Bearer ${unauthorizedUserId}`)
+                .send(updateDto)
+                .expect(HttpStatus.UNAUTHORIZED)
+                .then((response) => {
+                    expect(response.body.message).toContain('Unauthorized');
+                });
+
         });
     });
 

@@ -9,8 +9,8 @@ import {
 import { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { Tokens } from '../types';
-import { Public } from '../common/decorators';
+import { Tokens } from '../../types';
+import { Public } from '../../common/decorators';
 import { 
 	AuthService, RegisterDto
 } from '.';

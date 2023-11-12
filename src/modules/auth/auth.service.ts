@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UserService } from '../modules/users/user.service';
+import { UserService } from '../users/user.service';
 
-import { Tokens } from './../types';
+import { Tokens } from '../../types';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -12,16 +12,16 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async login(dto: LoginDto): Promise<Tokens> {
     const user: any = await this.userService.findUserByEmail(dto.email);
 
-    if (!user) throw new HttpException('User not found', HttpStatus.BAD_REQUEST);  
+    if (!user) throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
 
     const passwordMatches = await bcrypt.compare(dto.password, user.password);
 
-    if (!passwordMatches) throw new HttpException('Wrong password', HttpStatus.BAD_REQUEST);   
+    if (!passwordMatches) throw new HttpException('Wrong password', HttpStatus.BAD_REQUEST);
 
     const tokens = await this.getTokens(user);
 
@@ -37,7 +37,7 @@ export class AuthService {
 
     const existingUser = await this.userService.findUserByEmail(email);
 
-    if (existingUser)  throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);  
+    if (existingUser) throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
 
     const user: any = await this.userService.create(dto);
 
@@ -57,7 +57,7 @@ export class AuthService {
           email: user.email,
         },
         {
-          secret: 'at-secret',
+          secret: process.env.JWT_SECRET,
           expiresIn: '24h',
         },
       ),
@@ -79,7 +79,7 @@ export class AuthService {
     };
   }
 
-  async hashPassword(data: string) : Promise<string>{
+  async hashPassword(data: string): Promise<string> {
     return bcrypt.hash(data, 10);
   }
 }

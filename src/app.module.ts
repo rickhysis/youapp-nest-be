@@ -1,6 +1,6 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { DataBaseModule } from './providers/database/mongo/provider.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/users/user.module';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AccessTokenGuard } from './common/guards';

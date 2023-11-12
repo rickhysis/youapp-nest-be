@@ -6,10 +6,11 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AccessTokenGuard extends AuthGuard('jwt') {
-    constructor(private reflector: Reflector) {
+    constructor(private jwtService: JwtService, private reflector: Reflector) {
         super();
     }
 
@@ -27,7 +28,7 @@ export class AccessTokenGuard extends AuthGuard('jwt') {
     handleRequest(err, user, info) {
         console.log(info)
         if (err || !user) {
-            throw new UnauthorizedException('Access Denied.');
+            throw new UnauthorizedException('Unauthorized');
         }
         return user;
     }

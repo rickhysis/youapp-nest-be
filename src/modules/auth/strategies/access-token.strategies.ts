@@ -28,7 +28,7 @@ export class AcccessTokenStrategiest extends PassportStrategy(Strategy, 'jwt') {
                     return data;
                 },
             ]),
-            secretOrKey: 'at-secret',
+            secretOrKey: process.env.JWT_SECRET,
         });
     }
 

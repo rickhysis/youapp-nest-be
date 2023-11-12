@@ -3,8 +3,8 @@ import { Message } from './schemas/message.schema';
 import { MessageRepository } from './repository/message.repository';
 import { UserService } from '../../modules/users/user.service';
 import { MessagePublisherService } from './jobs/message-publisher.service';
-import { SocketGateway } from '@/providers/socket/socket.gateway';
-import { MessagesResponse } from '@/types/message.type';
+import { SocketGateway } from '../../providers/socket/socket.gateway';
+import { MessagesResponse } from '../../types/message.type';
 
 @Injectable()
 export class MessageService {
@@ -65,8 +65,8 @@ export class MessageService {
         this.socketGateway.handleMessage(payload);
     }
 
-    async findAll(q: any): Promise<Message[]> {
-        return await this.messageRepository.findAll(q);
+    async findAll(userId: string): Promise<Message[]> {
+        return await this.messageRepository.findAll(userId);
     }
 
 }

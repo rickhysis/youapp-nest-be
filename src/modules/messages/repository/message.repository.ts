@@ -12,17 +12,13 @@ export class MessageRepository {
         return createdMessage.save();
     }
 
-    async findAll(query: { q: string }): Promise<Message[]> {
-        let filters: mongoose.FilterQuery<MessageDocument> = {
+    async findAll(userId: string): Promise<Message[]> {
+        const filters: mongoose.FilterQuery<MessageDocument> = {
             $or: [
-                { sender_id: new RegExp(query.q, 'i') },
-                { receiver_id: new RegExp(query.q, 'i') },
+                { sender_id: userId },
+                { receiver_id: userId },
             ],
         };
-
-        if (!query.q) {
-            filters = {};
-        }
 
         const result = await this.MessageModel.find(filters)
             .select({ _id: 0, __v: 0, updatedAt: 0 })

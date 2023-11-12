@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsEnum, IsString, IsArray } from 'class-validator';
+import { IsOptional, IsEnum, IsString, IsArray, IsNotEmpty } from 'class-validator';
 import { Gender } from '../schemas/user.schema';
 
 
@@ -8,6 +8,7 @@ export class CreateUserDto {
         description: 'Name',
         example: 'My Name',
     })
+    @IsNotEmpty()
     @IsString()
     name: string;
 

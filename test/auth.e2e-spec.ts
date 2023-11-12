@@ -8,7 +8,7 @@ import {
 } from '../src/utils/test/helpers/module';
 import { AUTH_ROUTE_PREFIX } from '../src/common/constants/route';
 import { faker } from '@faker-js/faker';
-import { AuthModule } from '../src/auth/auth.module';
+import { AuthModule } from '../src/modules/auth/auth.module';
 import { UserModule } from '../src/modules/users/user.module';
 
 const REGISTER_ROUTE = `${AUTH_ROUTE_PREFIX}/register`;
